@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>CFIA Food Recalls Project</title>
+  <link rel="stylesheet" href="assets/css/main.css" />
+</head>
+<body class="is-preload">
+
+  <!-- Header -->
+    <header id="header">
+      <h1>CFIA Food Recalls Analysis</h1>
+      <p>Automated ETL Pipeline • SQL Server • Power BI</p>
+    </header>
+
+  <!-- Main Content -->
+    <div id="main" class="container">
+  
+      <section>
+        <h2>Project Overview</h2>
+        <p>
+          This project analyzes food recall data published by the 
+          <a href="https://inspection.canada.ca/en">Canadian Food Inspection Agency (CFIA)</a> 
+          to uncover patterns in bacterial contamination across Canada. The primary objective is to identify which 
+          bacteria are most frequently responsible for food recalls, as well as the types of food that are most commonly 
+          affected by them, enabling a targeted approach to future food safety efforts. A fully automated data pipeline 
+          was developed in Python to extract, clean, and store the data in a SQL Server database. 
+          Insights are visualized through a Power BI dashboard to support bacteria-focused monitoring and decision-making.
+        </p>
+      </section>
+
+      <section>
+        <h2>Data Source</h2>
+        <p>
+          The source data comes from <a href="https://open.canada.ca/data/en/dataset/d38de914-c94c-429b-8ab1-8776c31643e3#a3">CFIA's publicly available CSV files</a>, 
+          which are updated daily to reflect new recalls. These files contain detailed information including product name, issue, category and recall class.
+        </p>
+      </section>
+
+      <section>
+        <h2>Tools & Technologies</h2>
+        <ul>
+          <li><strong>Python:</strong> Developed a fully automated ETL pipeline for data extraction, transformation, and loading.</li>
+          <li><strong>Pandas:</strong> Performed data cleaning, filtering, and enrichment of the raw recall dataset.</li>
+          <li><strong>MSSQL Server (hosted on Azure):</strong> Used as the relational database to store the processed recall data in the cloud.</li>
+          <li><strong>SQLAlchemy:</strong> Enabled seamless interaction with the database using Object-Relational Mapping (ORM).</li>
+          <li><strong>GitHub:</strong> Used for version control and project collaboration.</li>
+          <li><strong>GitHub Actions:</strong> Automated the pipeline to run on a schedule and update processed data.</li>
+          <li><strong>Excel:</strong> Conducted exploratory data analysis (EDA) to identify patterns before dashboard development.</li>
+          <li><strong>Power BI:</strong> Designed an interactive dashboard to visualize recall trends and support decision-making.</li>
+          <li><strong>Poetry:</strong> Managed project dependencies and environment consistency.</li>
+          <li><strong>PowerPoint:</strong> Used to design the dashboard background templates and enhance the visual layout.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>ETL Pipeline</h2>
+        <h3>1. Extract</h3>
+        <p>The <a href="https://github.com/smillagallegos/PortfolioDataProjects/blob/main/CFIA%20Food%20Recalls%20Project/cfia_01_extracting.py">cfia_01_extracting.py </a>
+          Python script is responsible for downloading the latest recall dataset published by the <a href="https://inspection.canada.ca/en">CFIA</a>.
+          It then filters the records to retain only those where the issue is related to bacterial contamination, specifically <code>Listeria, E. Coli or Salmonella</code> This step is 
+          essential because the original dataset includes various types of recalls beyond food-related incidents, and this project focuses exclusively on bacterial contamination in food products.
+        </p>
+        <h3>2. Transform</h3>
+        <p>The <a href="https://github.com/smillagallegos/PortfolioDataProjects/blob/main/CFIA%20Food%20Recalls%20Project/cfia_02_transforming.py">cfia_02_transforming.py </a>
+          Pythin script is responsible for the following key data transformation tasks:
+        </p>
+        <ul>
+          <li><strong>Remove Duplicate Values.</strong> 
+            <p> Duplicate rows are eliminated, if any, to ensure that each recall record in the dataset is unique and maintain the accuracy of key metrics such as recall counts.</p>
+          </li>
+          <li><strong>Handle Missing Values.</strong> 
+            <p> Missing values in critical columns such as <strong><em>Recall Class</em></strong>, <strong><em>Issue</em></strong>, and <strong><em>Category</em></strong> were removed to ensure data integrity for the analysis.
+              Additionaly, regular expressions where used to identify consistent patterns in the <strong><em>Title</em></strong> column, allowing missing values in the <strong><em>Product</em></strong> column to be 
+              filled based on extracted text.
+            </p>
+          </li>
+          <li><strong>Standardize Formats and Data Types.</strong> 
+            <p> All categorical values were standardized across the dataset to avoid variations such as <em>Class I</em> and <em>Class 1</em>. Additionally, data types for each column were reviewed 
+              and corrected where necessary to maintain uniform formatting and support reliable processing.
+            </p>
+          </li>
+          <li><strong>Feature Engineering.</strong> 
+            <p> Compound values in the <strong><em>Issue</em></strong> column were parsed using string logic to extract more granular features such as 
+              <strong><em>Main Issue</em></strong>, <strong><em>Bacteria Subtype</em></strong>, and <strong><em>Secondary Hazard</em></strong>. This transformation enhances analytical depth and supports future modeling by separating 
+              multiple variables embedded in a single field.<br/>
+              For example, a single value like <code>"E. Coli - O157:H7 - non-pathogenic"</code> was split into:
+              <ul>
+                <li><strong>Main Issue:</strong> E. Coli</li>
+                <li><strong>Bacteria Subtype:</strong> O157:H7</li>
+                <li><strong>Secondary Issue (Hazard):</strong> non-pathogenic</li>
+              </ul>
+              To ensure accuracy and avoid making assumptions, the multiple recall records published by the <a href="https://inspection.canada.ca/en">CFIA</a> were manually reviewed. 
+              This helped confirm that multiple bacteria listed in a single issue (e.g., <code>"Listeria - Salmonella"</code>) represented independent contaminants detected 
+              in the product, not speculative possibilities. This validation step ensured that the engineered features correctly reflected the actual contamination data reported by CFIA.
+            </p>
+            <p>
+              To accurately reflect recalls with multiple recall classes (e.g., both <em>Class 1</em> and <em>Class 2</em>), a new <strong><em>ID</em></strong> column was introduced. 
+              This was necessary because some records in the original dataset included multiple recall classes for the same recall (same <code>NID</code>). 
+              According to the <a href="https://inspection.canada.ca/en" target="_blank">CFIA</a>, both classes are valid and officially assigned. 
+              To preserve this detail without compromising the integrity of the primary key, the data was restructured to allow <code>NID</code> duplication and a unique <strong><em>ID</em></strong> 
+              was created for each row, ensuring each class is correctly represented.
+            </p>
+          </li>
+        </ul>
+        
+        <h3>3. Load</h3>
+        <p>The <a href="https://github.com/smillagallegos/PortfolioDataProjects/blob/main/CFIA%20Food%20Recalls%20Project/cfia_03_loading.py">cfia_03_loading.py </a> Python
+          script inserts the processed data into a MSSQL Server database hosted on Azure with duplicate prevention based on recalls IDs.
+        </p>
+      </section>
+
+      <section>
+        <h2>Automation</h2>
+        <p>
+          A GitHub Actions workflow runs the pipeline daily at 2:00 PM ET and on demand. It handles pipeline execution, CSV updates, and commit back to the repository, ensuring continuous data freshness.
+        </p>
+      </section>
+
+      <section>
+        <h2>Exploratory Data Analysis (EDA)</h2>
+        <p>
+          Before building the dashboard, I performed an exploratory analysis of the dataset in <strong><em>Excel</em></strong>. My goal was to understand the purpose and meaning of each feature, assess the quality and consistency of the data, 
+          and identify any issues such as missing values, inconsistent formats, or irrelevant columns. This step helped me clarify what business questions I wanted to answer, what metrics would be meaningful, and how 
+          to best present them, not just in terms of content, but also by selecting the most appropriate chart types for each type of data. By doing so, I ensured that the dashboard would not only be accurate and 
+          informative, but also intuitive and visually effective for the end user.
+        </p>
+      </section>
+
+      <section>
+        <h2>Power BI Dashboard</h2>
+        <p>
+          The final dashboard offers insights into:
+        </p>
+        <ul>
+          <li><strong>Recall Trends Over Time</strong>
+            <p>Yearly and monthly trends in recall cases for each bacteria type (E. Coli, Listeria, Salmonella), helping identify outbreak peaks and long-term patterns.</p>
+          </li>
+          <li><strong>Recall Distribution by Bacteria</strong>
+            <p>Shows the proportion of recalls attributed to each bacteria.</p>
+          </li>
+          <li><strong>Most Recalled Food Categories</strong>
+            <p>Reveals which food types are most frequently recalled.</p>
+          </li>
+          <li><strong>Severity by Bacteria</strong>
+            <p>Breaks down recall cases by bacteria and severity class (Class 1, 2, and 3), offering insight into the risk level associated with each bacteria.</p>
+          </li>
+          <li><strong>Key Metrics Cards</strong>
+            <ul>
+               <li>Total Recalls</li>
+               <li>Average Recalls Per Year</li>
+               <li>Most Recalled Category</li>
+               <li>Most Recalled Year</li>
+            </ul>
+          </li>
+          <li><strong>Interactive Filters</strong>
+            <p>Users can dynamically filter the dashboard by bacteria type or time period using slicers, enabling focused analysis and comparison.</p>
+          </li>
+        </ul><br/>
+        <div>
+          <iframe title="Food_Recalls_Dashboard" width=100% height="750" src="https://app.powerbi.com/reportEmbed?reportId=f9af09e4-ef18-4113-8c2b-d32100c81236&autoAuth=true&ctid=ef52a2a6-958e-446d-97f5-776b94b8a0cc" frameborder="0" allowFullScreen="true"></iframe>
+        </div>
+      </section>
+
+      <section>
+        <h2>Dashboard Template & Visual Design</h2>
+        <p>
+          To give the dashboard a polished, user-friendly look, I created custom layout templates in <strong><em>PowerPoint</em></strong> that serve as visual backdrops for the dashboard. 
+          I wanted to inject my own style into the project and show my interest in user-centred design by beginning to explore concepts like colour psychology and 
+          layout hierarchy. This creative process allowed me to bring both analytical insight and visual clarity to the final presentation to better engage the final viewer.
+        </p>
+      </section>
+
+      <section>
+        <h2>Key Learnings</h2>
+        <ul>
+          <li>Built a robust automated ETL pipeline using best practices for automation and scalability.</li>
+          <li>Improved confidence in SQL and data warehousing by working with real-world food recall data.</li>
+          <li>Gained hands-on experience with CI/CD using GitHub Actions.</li>
+          <li>Designed impactful visualizations for real-world datasets that highlight critical trends in public health data..</li>
+          <li>Reinforced the value of thorough data exploration as the foundation for meaningful analysis.</li>
+          <li>Discovered how thoughtful visual template design enhances user experience and storytelling.</li>
+          <li>Learned the importance of consistent dependency management to reproduce the project environment 
+            reliably across different systems and avoid version conflicts.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Ideas for Further Development</h2>
+        <p>
+          This project lays the groundwork for deeper research into food safety by identifying the bacteria most frequently 
+          responsible for recalls in Canada. Future enhancements aim to expand on this foundation in the following ways:
+          <ul>
+            <li><strong>Data Integration.</strong><br>Enrich the analysis by integrating additional datasets (e.g., weather, geographic 
+              distribution, supply chain data) to explore possible correlations with recall frequency.
+            </li>
+            <li><strong>Risk Analysis.</strong><br>Investigate external environmental factors such as temperature, humidity, and 
+              storage conditions that contribute to the growth and spread of the most common bacteria identified. 
+              This could help predict and mitigate risks in food production and distribution chains.
+            </li>
+            <li><strong>Predictive Modeling.</strong><br>Develop a machine learning model to estimate the probability of bacterial contamination in 
+              different food categories. By training the model on historical recall data, it could provide early warnings for 
+              high-risk products and guide preventive measures.
+            </li>
+          </ul>
+        </p>
+      </section>
+
+      <section>
+        <h2>Run the Pipeline</h2>
+        <ul>
+          <li>Go to <a href="https://github.com/smillagallegos/PortfolioDataProjects/actions/workflows/cfia-pipeline.yml">GitHub Actions</a></li>
+          <li>Click <code>Run workflow</code></li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Explore More</h2>
+        <ul>
+          <li><a href="https://github.com/smillagallegos/PortfolioDataProjects/tree/main/CFIA%20Food%20Recalls%20Project">GitHub Repository</a></li>
+          <li><a href="https://app.powerbi.com/reportEmbed?reportId=f9af09e4-ef18-4113-8c2b-d32100c81236&autoAuth=true&ctid=ef52a2a6-958e-446d-97f5-776b94b8a0cc">Power BI Dashboard</a></li>
+        </ul>
+      </section>
+
+    </div>
+
+  <!-- Copyright -->
+    <div id="copyright">
+        <p>&copy; 2025 Salma Milla Gallegos • All rights reserved</p>
+    </div>
+
+</body>
+</html>
