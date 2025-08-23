@@ -114,7 +114,10 @@
       <section>
         <h2>Automation</h2>
         <p>
-          A GitHub Actions workflow runs the pipeline daily at 2:00 PM ET and on demand. It handles pipeline execution, CSV updates, and commit back to the repository, ensuring continuous data freshness.
+          A GitHub Actions workflow runs the pipeline daily at 2:00 PM ET and on demand. 
+          It automates the full process: executing the pipeline, updating the processed CSV, committing changes back to the repository, 
+          and securely triggering a refresh of the Power BI dashboard. 
+          This ensures that both the data and visualizations remain consistently up to date without manual intervention.
         </p>
       </section>
 
@@ -157,9 +160,16 @@
           <li><strong>Interactive Filters</strong>
             <p>Users can dynamically filter the dashboard by bacteria type or time period using slicers, enabling focused analysis and comparison.</p>
           </li>
-        </ul><br/>
+        </ul>
         <div>
-          <iframe title="Food_Recalls_Dashboard" width=100% height="750" src="https://app.powerbi.com/reportEmbed?reportId=f9af09e4-ef18-4113-8c2b-d32100c81236&autoAuth=true&ctid=ef52a2a6-958e-446d-97f5-776b94b8a0cc" frameborder="0" allowFullScreen="true"></iframe>
+          <img title="Food_Recalls_Dashboard" width=100% height="750" src="images/cfia_food_recalls_dashboard.png">
+        </div>
+      </section>
+
+      <section>
+        <h2>Data Workflow Pipeline</h2>
+        <div>
+          <img style="display:block; margin:auto;" title="Pipeline Flow" width=85% height="850" src="images/pipeline_flow.png">
         </div>
       </section>
 
@@ -220,7 +230,7 @@
         <h2>Explore More</h2>
         <ul>
           <li><a href="https://github.com/smillagallegos/PortfolioDataProjects/tree/main/CFIA%20Food%20Recalls%20Project">GitHub Repository</a></li>
-          <li><a href="https://app.powerbi.com/reportEmbed?reportId=f9af09e4-ef18-4113-8c2b-d32100c81236&autoAuth=true&ctid=ef52a2a6-958e-446d-97f5-776b94b8a0cc">Power BI Dashboard</a></li>
+          <li><a href="https://app.powerbi.com/view?r=eyJrIjoiMzc1MDlhNmEtNzliNi00ZDA4LWI1NWEtZjFlZGFhZTU0ZDMxIiwidCI6ImVmNTJhMmE2LTk1OGUtNDQ2ZC05N2Y1LTc3NmI5NGI4YTBjYyJ9">Interactive Power BI Dashboard</a></li>
         </ul>
       </section>
 
